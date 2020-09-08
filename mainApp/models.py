@@ -12,7 +12,7 @@ class Customer(models.Model):
     """
     phone = models.CharField(max_length=20)
     address = models.TextField()
-    balance = models.IntegerField()
+    balance = models.PositiveIntegerField(default=20000, null=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, )
 
     def deposit(self, amount: int):
@@ -20,6 +20,7 @@ class Customer(models.Model):
         :param amount:int
         :return:void
         """
+        self.balance += amount
         pass
 
     def spent(self, amount: int):
@@ -27,6 +28,8 @@ class Customer(models.Model):
         :param amount:int
         :return:void
         """
+        if self.balance >= amount : self.balance -= amount
+        else : raise Exception("اعتبار کافی نیست.")
         pass
 
 
@@ -34,25 +37,34 @@ class Product(models.Model):
     """Contains products info
     code : A 10-letters word representing primary key.
     name : A string representing products name. Less than 100 chars.
+    price : Price (in Tomans) of one unite of product.
     inventory : positive int - representing count of remained product.
     """
-    code = models.CharField(max_length=10)
+    code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=100)
-    price = models.IntegerField()
-    inventory = models.IntegerField()
+    price = models.PositiveIntegerField()
+    inventory = models.PositiveIntegerField(default=0, null=True)
 
     def increase_inventory(self, amount:int):
         """ increases inventory by count of <amount>
         :param amount:int
         :return:void
         """
+        if amount < 1 : raise Exception('ورودی نادرست است!')
+        self.inventory += amount
+        self.save()
         pass
 
     def decrease_inventory(self, amount:int):
         """ decreases inventory by count of <amount>
-        :param amount:int
+        :param amount: positive int
         :return:void
         """
+        if amount < 1: raise Exception('ورودی نادرست است!')
+        if self.inventory >= amount :
+            self.inventory -= amount
+            self.save()
+        else: raise Exception("موجودی این کالا کافی نیست.")
         pass
 
 
@@ -62,7 +74,7 @@ class Order(models.Model):
     order_time : datetime - A time object representing order time.
     total_price = positive int - referring to total
     status = A specific integer (selected from class's constants) representing order's status.
-    rows = TODO
+    rows = List of order rows.
     """
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     order_time = models.DateTimeField()
@@ -79,23 +91,47 @@ class Order(models.Model):
         (STATUS_SENT, "ارسال‌شده"),
     )
     status = models.IntegerField(choices=status_choices)
+    rows = list()
 
-
-    def initiate(self, customer):
+    @staticmethod
+    def initiate(customer: Customer):
         """
-        initiates new orders.
+        initiates and returns a new order
         :param customer:Customer
-        :return:void
+        :return:Order
         """
+        from django.utils import timezone
+        if Order.STATUS_SHOPPING in [item.status for item in Order.objects.filter(customer=customer)]:
+            raise Exception("مشتری سفارش دیگری دارد که هنوز به سرانجام نرسیده.")
+        order = Order(customer=customer, rows=list(),
+                      status=Order.STATUS_SHOPPING,
+                      order_time=timezone.now(), total_price=0)
+        order.save()
+        return order
         pass
 
     def add_product(self, product: Product, amount:int):
         """Adds <amount> number of <product> into order card.
-
         :param product:Product
         :param amount:int
         :return:void
         """
+        if amount <= 0:
+            raise Exception("عملیات اشتباه است!")
+        if amount > Product.objects.get(code=product.code).inventory:
+            raise Exception("این مقدار از محصول وارد شده موجود نیست.")
+        if product in [item.product for item in self.rows]:
+            order_row = self.getOrderRow(product)
+            order_row.amount += amount
+            order_row.save()
+        else:
+            order_row = OrderRow(product=product, amount=amount, order=self)
+            order_row.save()
+            self.rows.append(order_row)
+
+        from django.utils import timezone
+        self.order_time = timezone.now()
+        self.save()
         pass
 
     def remove_product(self, product: Product, amount: int = None):
@@ -105,6 +141,26 @@ class Order(models.Model):
         :param amount:int Optional
         :return:void
         """
+        if amount <= 0 or not Product.objects.filter(code=product.code).exists():
+            raise Exception("عملیات اشتباه است!")
+
+        if product in [item.product for item in self.rows]:
+            order_row= self.getOrderRow(product)
+            if amount is None:
+                order_row.delete()
+                self.rows.remove(order_row)
+            elif order_row.amount >= amount:
+                order_row.amount -= amount
+                order_row.save()
+            else:
+                raise Exception("مقدار وارد شده بیش از مقدار موجود در سبد خرید است.")
+
+        else: raise Exception("چنین محصولی در سبد خرید شما نیست.")
+
+        from django.utils import timezone
+        self.order_time = timezone.now()
+        self.save()
+
         pass
 
     def submit(self):
@@ -112,6 +168,53 @@ class Order(models.Model):
         if enough amount of ordered products could be satisfied.
         :return:void
         """
+
+        #       validation
+
+        # It's better to reduce product's inventories before validating inorder
+        # to prevent conflict between the shopping.
+        # If the submit was not success full the inventories will be increased by the decreased value.
+
+        if self.status != Order.STATUS_SHOPPING:
+            raise Exception("این سفارش قابل ثبت نیست.")
+
+        temporarily_reduced = list()
+
+        def recharge_inventories(max):
+            """Increases inventories by reduced value, for all of manipulated products.
+            :param max:int last index of manipulated products in orderRows list. #exlusive!"""
+            j = 0
+            for order_row in self.rows:
+                if j == max: break
+                order_row.product.increase_inventory(temporarily_reduced[j])
+                j += 1
+
+        i = 0
+        for order_row in self.rows:
+            if order_row.amount > order_row.product.inventory:
+                recharge_inventories(i)
+                raise Exception(
+                    "هنگام خرید شما کاربران دیگر محصول %s را خریداری کرند. و اکنون این محصول تنها به تعداد %n تا موجود میباشد." \
+                                % (order_row.product.name, order_row.product.inventory))
+            else:
+                temporarily_reduced.append(order_row.amount)
+                order_row.product.decrease_inventory(order_row.amount)
+            i += 1
+
+
+        price_sum = sum([item.product.price * item.amount for item in self.rows])
+        customer_balance = self.customer.balance
+        if price_sum > customer_balance:
+            recharge_inventories(i)
+            raise Exception("موجودی حساب شما کافی نیست.")
+
+        #       submit
+        self.customer.balance -= price_sum
+        self.customer.save()
+        self.status = Order.STATUS_SUBMITTED
+        from django.utils import timezone
+        self.order_time = timezone.now()
+        self.save()
         pass
 
     def cancel(self):
@@ -120,12 +223,33 @@ class Order(models.Model):
         And changes order status to STATUS_CANCELED
         :return:void
         """
+        if self.status != Order.STATUS_SUBMITTED:
+            raise Exception("عملیات غیر مجاز.")
+
+        if self.status == Order.STATUS_SUBMITTED:
+            for order_row in self.rows:
+                self.customer.balance += order_row.product.price * order_row.amount
+                self.customer.save()
+                order_row.product.increase_inventory(order_row.amount)
+
+        self.status = Order.STATUS_CANCELED
+        self.save()
         pass
 
     def send(self):
         """Changes order's status from STATUS_SUBMITTED to STATUS_SENT
         :return:void"""
+        if self.status != Order.STATUS_SUBMITTED:
+            raise Exception("سفارش ثبت نشده. یا از سفارش انصراف داده شده.")
+        self.status = Order.STATUS_SENT
+        self.save()
         pass
+
+    def getOrderRow(self,product:Product):
+        for orderRow in self.rows:
+            if orderRow.product == product:
+                return orderRow
+        return None
 
 
 class OrderRow(models.Model):
