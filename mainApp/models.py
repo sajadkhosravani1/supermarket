@@ -29,7 +29,7 @@ class Customer(models.Model):
         :return:void
         """
         if self.balance >= amount : self.balance -= amount
-        else : raise Exception("اعتبار کافی نیست.")
+        else : raise Exception("Customer balance is not enough!")
         pass
 
 
@@ -50,7 +50,7 @@ class Product(models.Model):
         :param amount:int
         :return:void
         """
-        if amount < 1 : raise Exception('ورودی نادرست است!')
+        if amount < 1 : raise Exception('Invalid input.')
         self.inventory += amount
         self.save()
         pass
@@ -60,11 +60,11 @@ class Product(models.Model):
         :param amount: positive int
         :return:void
         """
-        if amount < 1: raise Exception('ورودی نادرست است!')
+        if amount < 1: raise Exception('Invalid input.')
         if self.inventory >= amount :
             self.inventory -= amount
             self.save()
-        else: raise Exception("موجودی این کالا کافی نیست.")
+        else: raise Exception("Product inventory is not enough.")
         pass
 
 
@@ -102,10 +102,11 @@ class Order(models.Model):
         """
         from django.utils import timezone
         if Order.STATUS_SHOPPING in [item.status for item in Order.objects.filter(customer=customer)]:
-            raise Exception("مشتری سفارش دیگری دارد که هنوز به سرانجام نرسیده.")
-        order = Order(customer=customer, rows=list(),
+            raise Exception("There's another shopping order for this customer.")
+        order = Order(customer=customer,
                       status=Order.STATUS_SHOPPING,
                       order_time=timezone.now(), total_price=0)
+        order.rows = []
         order.save()
         return order
         pass
@@ -117,9 +118,9 @@ class Order(models.Model):
         :return:void
         """
         if amount <= 0:
-            raise Exception("عملیات اشتباه است!")
+            raise Exception("Wrong operation.")
         if amount > Product.objects.get(code=product.code).inventory:
-            raise Exception("این مقدار از محصول وارد شده موجود نیست.")
+            raise Exception("Inventory is not enough.")
         if product in [item.product for item in self.rows]:
             order_row = self.getOrderRow(product)
             order_row.amount += amount
@@ -142,7 +143,7 @@ class Order(models.Model):
         :return:void
         """
         if amount <= 0 or not Product.objects.filter(code=product.code).exists():
-            raise Exception("عملیات اشتباه است!")
+            raise Exception("Wrong operation.")
 
         if product in [item.product for item in self.rows]:
             order_row= self.getOrderRow(product)
@@ -153,9 +154,9 @@ class Order(models.Model):
                 order_row.amount -= amount
                 order_row.save()
             else:
-                raise Exception("مقدار وارد شده بیش از مقدار موجود در سبد خرید است.")
+                raise Exception("Entered amount is much than the amount in the card.")
 
-        else: raise Exception("چنین محصولی در سبد خرید شما نیست.")
+        else: raise Exception("There is no such product in customer's card.")
 
         from django.utils import timezone
         self.order_time = timezone.now()
@@ -176,7 +177,7 @@ class Order(models.Model):
         # If the submit was not success full the inventories will be increased by the decreased value.
 
         if self.status != Order.STATUS_SHOPPING:
-            raise Exception("این سفارش قابل ثبت نیست.")
+            raise Exception("This order is not submittable.")
 
         temporarily_reduced = list()
 
@@ -194,8 +195,8 @@ class Order(models.Model):
             if order_row.amount > order_row.product.inventory:
                 recharge_inventories(i)
                 raise Exception(
-                    "هنگام خرید شما کاربران دیگر محصول %s را خریداری کرند. و اکنون این محصول تنها به تعداد %n تا موجود میباشد." \
-                                % (order_row.product.name, order_row.product.inventory))
+                    """The product \"%s\" has been bought by other customers while you where shopping. 
+                    Now the product's inventory is %n numbers.""" % (order_row.product.name, order_row.product.inventory))
             else:
                 temporarily_reduced.append(order_row.amount)
                 order_row.product.decrease_inventory(order_row.amount)
@@ -206,7 +207,7 @@ class Order(models.Model):
         customer_balance = self.customer.balance
         if price_sum > customer_balance:
             recharge_inventories(i)
-            raise Exception("موجودی حساب شما کافی نیست.")
+            raise Exception("Not enough balance.")
 
         #       submit
         self.customer.balance -= price_sum
@@ -224,7 +225,7 @@ class Order(models.Model):
         :return:void
         """
         if self.status != Order.STATUS_SUBMITTED:
-            raise Exception("عملیات غیر مجاز.")
+            raise Exception("Not permitted operation.")
 
         if self.status == Order.STATUS_SUBMITTED:
             for order_row in self.rows:
@@ -240,7 +241,7 @@ class Order(models.Model):
         """Changes order's status from STATUS_SUBMITTED to STATUS_SENT
         :return:void"""
         if self.status != Order.STATUS_SUBMITTED:
-            raise Exception("سفارش ثبت نشده. یا از سفارش انصراف داده شده.")
+            raise Exception("The order is not submitted or has been cancelled.")
         self.status = Order.STATUS_SENT
         self.save()
         pass
