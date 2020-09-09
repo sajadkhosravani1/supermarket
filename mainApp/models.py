@@ -85,10 +85,10 @@ class Order(models.Model):
     STATUS_CANCELED = 3
     STATUS_SENT = 4
     status_choices = (
-        (STATUS_SHOPPING, "در حال خرید"),
-        (STATUS_SUBMITTED, "ثبت‌شده"),
-        (STATUS_CANCELED, "لغوشده"),
-        (STATUS_SENT, "ارسال‌شده"),
+        (STATUS_SHOPPING, "shopping"),
+        (STATUS_SUBMITTED, "submitted"),
+        (STATUS_CANCELED, "canceled"),
+        (STATUS_SENT, "sent"),
     )
     status = models.IntegerField(choices=status_choices)
     rows = list()
