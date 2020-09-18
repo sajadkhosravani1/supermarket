@@ -4,6 +4,7 @@ from django.db.utils import IntegrityError
 import json
 from .models import *
 
+# Products
 
 @csrf_exempt
 def product_insert(request):
@@ -33,7 +34,7 @@ def product_list(request):
 @csrf_exempt
 def product_info(request, product_id):
     try:
-        res = Product.objects.get(id=product_id)
+        res = ects.get(id=product_id)
         return JsonResponse(res.to_dict(), status=200)
     except Product.DoesNotExist:
         return JsonResponse({"message": "Product Not Found."}, status=404)
@@ -57,3 +58,28 @@ def product_editInventory(request, product_id):
         return JsonResponse({'message': str(e)}, status=400)
 
     return JsonResponse(product.to_dict(), status=200)
+
+
+# Customers
+
+@csrf_exempt
+def customer_register(request):
+    try:
+        args = json.loads(request.body.decode('utf-8'))
+        user = User(username=args['username'], first_name=args['first_name'], last_name=args['last_name'],
+                    email=args['email'])
+        user.set_password(args['password'])
+        user.save()
+    except IntegrityError:
+        return JsonResponse({"message": "Username already exists."}, status=400)
+    except Exceptoin:
+        return JsonResponse({"message": "Something is wrong!"}, status=400)
+
+    try:
+        customer = Customer(phone=args['phone'], address=args['address'], user=user)
+        customer.save()
+    except Exception:
+        user.delete()
+        return JsonResponse({"message": "Something is wrong!"}, status=400)
+
+    return JsonResponse({'id': customer.id}, status=201)
