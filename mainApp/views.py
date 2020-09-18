@@ -21,10 +21,17 @@ def product_insert(request):
     return JsonResponse({'id':product.id}, status=201)
 
 
-@csrf_exempt
 def product_list(request):
     products = Product.objects.all()
 
     if request.method == 'GET' and 'search' in request.GET:
         products = products.filter(name__contains=request.GET['search'])
     return JsonResponse({'products': [product.to_dict() for product in products]}, status=200)
+
+
+def product_info(request, product_id):
+    try:
+        res = Product.objects.get(id=product_id)
+        return JsonResponse(res.to_dict(), status=200)
+    except Product.DoesNotExist:
+        return JsonResponse({"message": "Product Not Found."}, status=404)
