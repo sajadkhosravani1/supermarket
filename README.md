@@ -220,9 +220,36 @@ POST /accounts/customer/register/
         }
     ]
 }
-
 ``` 
 
+### 3- Getting some specific Customer's details
+
+برای مشاهده اطلاعات یک مشتری، یک درخواست GET به آدرس زیر ارسال می‌شود. در بخش آخر آدرس، شماره شناسه مشتری (در مثال زیر، 12) قرار می‌گیرد.
+
+`GET /accounts/customer/12/`
+
+در پاسخ این درخواست، اگر یک مشتری با این شناسه وجود نداشت، کد 404 و پیامی مناسب بازگردانده می‌شود. در غیر این صورت نیز کد 200 به همراه اطلاعات مشتری در پاسخ ارائه می‌شود. دقت کنید که اطلاعات کاربر متصل به مشتری (شامل نام، نام خانوادگی، نام کاربری و رایانامه) نیز در بدنه پاسخ قرار گیرد.
+
+```json
+404 Not Found
+----------------
+{"message": "Customer Not Found."}
+
+``` 
+```json
+200 OK
+----------------
+{
+    "id": 12,
+    "username": "hamed",
+    "first_name": "Hamed",
+    "last_name": "Moghimi",
+    "email": "hamed@example.com",
+    "phone": "021-22334455",
+    "address": "Tehran, No.1",
+    "balance": 20000
+} 
+```
 اگر در همین درخواست، فیلد search با مقدار hamed قرار می‌گرفت، همین پاسخ بازگردانده می‌شد؛ با این تفاوت که مشتری شماره ۱۳ در لیست نمی‌آمد. مشتری شماره ۱۲ به دلیل وجود کلمه hamed در نام و نام کاربری خود و کاربر شماره ۱۴ به دلیل وجود کلمه hamed در بخشی از آدرس خود در لیست ظاهر می‌شوند. بدیهی است که برخی موارد ممکن است جستجو برای کلمه خاصی، منجر به خالی‌شدن فهرست خروجی شود که در این موارد نیز، یک لیست خالی جلوی customers قرار می‌گیرد.
 
 ## TODO
@@ -235,7 +262,7 @@ POST /accounts/customer/register/
 - [ ] Customers management
     - [x] Registering new Customer
     - [x] List of Customers, and search them
-    - [ ] Getting some specific Customer's details.
+    - [x] Getting some specific Customer's details.
     - [ ] Editing some specific Customer's details.
     - [ ] Log in
     - [ ] Log out
