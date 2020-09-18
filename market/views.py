@@ -83,3 +83,17 @@ def customer_register(request):
         return JsonResponse({"message": "Something is wrong!"}, status=400)
 
     return JsonResponse({'id': customer.id}, status=201)
+
+
+@csrf_exempt
+def customer_list(request):
+    customers = Customer.objects.all()
+
+    if request.method == 'GET' and 'search' in request.GET:
+        from django.db.models import Q
+        searched = request.GET['search']
+        customers = customers.filter(Q(user__first_name__contains=searched) |
+                             Q(user__last_name__contains=searched) |
+                             Q(user__username__contains=searched) |
+                             Q(address__contains=searched))
+    return JsonResponse({'products': [customer.to_dict() for customer in customers]}, status=200)

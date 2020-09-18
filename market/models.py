@@ -33,8 +33,20 @@ class Customer(models.Model):
         pass
 
     def __str__(self):
-        return "Customer{address:%s, balance:%i, phone:%s}"\
-            % (self.address, self.balance, self.phone)
+        return "Customer{address:%s, balance:%i, phone:%s, user:%s}"\
+            % (self.address, self.balance, self.phone, str(self.user))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "username": self.user.username,
+            "first_name": self.user.first_name,
+            "last_name": self.user.last_name,
+            "email": self.user.email,
+            "phone": self.phone,
+            "address": self.address,
+            "balance": self.balance
+        }
 
 
 class Product(models.Model):
