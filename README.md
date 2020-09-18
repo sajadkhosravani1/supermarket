@@ -173,8 +173,57 @@ POST /accounts/customer/register/
 ----------------
 {"message": "Username already exists. (or other messages)"}
 ```
- 
+### 2- List of Customers, and search them
 
+برای مشاهده فهرست مشتریان یک درخواست GET به آدرس زیر ارسال می‌شود. در صورتی که نیاز به جستجو برای یک عبارت باشد، یک فیلد search به صورت پارامتر در ادامه آدرس می‌آید.
+
+`GET /accounts/customer/list/`
+
+`GET /accounts/customer/list/?search=hamed`
+
+در پاسخ این درخواست، فهرستی از مشتری‌ها به همراه تمامی فیلدهای آن به صورت JSON با کد پاسخ 200 ارسال می‌شود. دقت کنید که برای هر مشتری، اطلاعات کاربر متصل به آن نیز (شامل نام، نام خانوادگی، نام کاربری و رایانامه) ذکر می‌شود. اگر کاربر کلمه‌ای برای جستجو ارسال کرده بود، باید مشتریانی در این فهرست نمایش داده شوند که کلمه مذکور در نام یا نام خانوادگی یا نام کاربری یا آدرس آن‌ها وجود داشته باشد. در مثال زیر، پاسخ به یک درخواست فهرست کامل را مشاهده می‌کنید:
+
+```json
+200 OK
+----------------
+{
+    "customers": [
+        {
+            "id": 12,
+            "username": "hamed",
+            "first_name": "Hamed",
+            "last_name": "Moghimi",
+            "email": "hamed@example.com",
+            "phone": "021-22334455",
+            "address": "Tehran, No.1",
+            "balance": 20000
+        },
+        {
+            "id": 13,
+            "username": "ali",
+            "first_name": "Ali",
+            "last_name": "Moradi",
+            "email": "ali@example.com",
+            "phone": "021-22335566",
+            "address": "Tehran, No.2",
+            "balance": 30000
+        },
+        {
+            "id": 14,
+            "username": "reza",
+            "first_name": "Reza",
+            "last_name": "Maleki",
+            "email": "reza@example.com",
+            "phone": "081-22335566",
+            "address": "Hamedan, No.3",
+            "balance": 10000
+        }
+    ]
+}
+
+``` 
+
+اگر در همین درخواست، فیلد search با مقدار hamed قرار می‌گرفت، همین پاسخ بازگردانده می‌شد؛ با این تفاوت که مشتری شماره ۱۳ در لیست نمی‌آمد. مشتری شماره ۱۲ به دلیل وجود کلمه hamed در نام و نام کاربری خود و کاربر شماره ۱۴ به دلیل وجود کلمه hamed در بخشی از آدرس خود در لیست ظاهر می‌شوند. بدیهی است که برخی موارد ممکن است جستجو برای کلمه خاصی، منجر به خالی‌شدن فهرست خروجی شود که در این موارد نیز، یک لیست خالی جلوی customers قرار می‌گیرد.
 
 ## TODO
 - [x] Modeling
@@ -185,7 +234,7 @@ POST /accounts/customer/register/
     - [x] Changing some specific Product's inventory.
 - [ ] Customers management
     - [x] Registering new Customer
-    - [ ] List of Customers, and search them
+    - [x] List of Customers, and search them
     - [ ] Getting some specific Customer's details.
     - [ ] Editing some specific Customer's details.
     - [ ] Log in
