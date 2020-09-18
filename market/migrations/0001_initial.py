@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 ('order_time', models.DateTimeField()),
                 ('total_price', models.IntegerField()),
                 ('status', models.IntegerField(choices=[(1, 'در حال خرید'), (2, 'ثبت\u200cشده'), (3, 'لغوشده'), (4, 'ارسال\u200cشده')])),
-                ('customer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mainApp.Customer')),
+                ('customer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='market.Customer')),
             ],
         ),
         migrations.CreateModel(
@@ -49,8 +49,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('amount', models.IntegerField()),
-                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mainApp.Order')),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mainApp.Product')),
+                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='market.Order')),
+                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='market.Product')),
             ],
         ),
     ]
