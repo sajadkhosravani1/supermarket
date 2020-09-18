@@ -32,6 +32,10 @@ class Customer(models.Model):
         else : raise Exception("Customer balance is not enough!")
         pass
 
+    def __str__(self):
+        return "Customer{address:%s, balance:%i, phone:%s}"\
+            % (self.address, self.balance, self.phone)
+
 
 class Product(models.Model):
     """Contains products info
@@ -66,6 +70,10 @@ class Product(models.Model):
             self.save()
         else: raise Exception("Product inventory is not enough.")
         pass
+
+    def __str__(self):
+        return "Product{code:%s, name:%s, price:%i, inventory:%i}"\
+               % (self.code, self.name, self.price, self.inventory)
 
 
 class Order(models.Model):
@@ -252,6 +260,10 @@ class Order(models.Model):
                 return orderRow
         return None
 
+    def __str__(self):
+        return "Order{customer:%s, order_time:%s, rows:%s, status:%s, total_price:%i}"\
+            % (str(self.customer), str(self.order_time), str(self.rows), self.total_price)
+
 
 class OrderRow(models.Model):
     """Represents orders one single item.
@@ -262,3 +274,7 @@ class OrderRow(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     amount = models.IntegerField()
+
+    def __str__(self):
+        return "OrderRow{product:%s, amount: %i}"\
+               % (str(self.product), self.amount)
