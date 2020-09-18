@@ -34,7 +34,7 @@ def product_list(request):
 @csrf_exempt
 def product_info(request, product_id):
     try:
-        res = ects.get(id=product_id)
+        res = Product.objects.get(id=product_id)
         return JsonResponse(res.to_dict(), status=200)
     except Product.DoesNotExist:
         return JsonResponse({"message": "Product Not Found."}, status=404)
@@ -97,3 +97,12 @@ def customer_list(request):
                              Q(user__username__contains=searched) |
                              Q(address__contains=searched))
     return JsonResponse({'products': [customer.to_dict() for customer in customers]}, status=200)
+
+
+@csrf_exempt
+def customer_info(request, customer_id):
+    try:
+        res = Customer.objects.get(id=customer_id)
+        return JsonResponse(res.to_dict(), status=200)
+    except Customer.DoesNotExist:
+        return JsonResponse({"message": "Customer Not Found."}, status=404)
