@@ -252,6 +252,59 @@ POST /accounts/customer/register/
 ```
 اگر در همین درخواست، فیلد search با مقدار hamed قرار می‌گرفت، همین پاسخ بازگردانده می‌شد؛ با این تفاوت که مشتری شماره ۱۳ در لیست نمی‌آمد. مشتری شماره ۱۲ به دلیل وجود کلمه hamed در نام و نام کاربری خود و کاربر شماره ۱۴ به دلیل وجود کلمه hamed در بخشی از آدرس خود در لیست ظاهر می‌شوند. بدیهی است که برخی موارد ممکن است جستجو برای کلمه خاصی، منجر به خالی‌شدن فهرست خروجی شود که در این موارد نیز، یک لیست خالی جلوی customers قرار می‌گیرد.
 
+
+## 4- Editing some specific Customer's details
+برای ویرایش اطلاعات یک مشتری، یک درخواست POST به آدرس زیر ارسال می‌شود. در بخش آخر آدرس، شماره شناسه مشتری (در مثال زیر، 12) قرار می‌گیرد. در بدنه درخواست نیز، اطلاعات جدید مشتری قرار داده می‌شود.
+```json
+POST /accounts/customer/12/edit/
+-------------------------------
+{
+    "first_name": "Ehsan",
+    "email": "ehsan@example.com",
+    "address": "Tehran, No.2",
+    "balance": 120000
+}
+```
+ 
+در پاسخ این درخواست، اگر یک مشتری با این شناسه وجود نداشت، کد 404 و پیامی مناسب بازگردانده می‌شود. اگر ویرایش اطلاعات مشتری با موفقیت انجام شود، کد 200 به همراه اطلاعات جدید مشتری در پاسخ ارائه می‌شود.
+```json
+404 Not Found
+----------------
+{"message": "Customer Not Found."}
+
+ ```
+```json
+200 OK
+----------------
+{
+    "id": 12,
+    "username": "hamed",
+    "first_name": "Ehsan",
+    "last_name": "Moghimi",
+    "email": "ehsan@example.com",
+    "phone": "021-22334455",
+    "address": "Tehran, No.2",
+    "balance": 120000
+}
+```
+ 
+اما دو حالت دیگر نیز برای این درخواست باید در نظر گرفته شود. اول آن‌که اطلاعات احراز هویت مشتری در سامانه (یعنی شناسه مشتری، نام کاربری و گذرواژه) قابل ویرایش نیست. بنابراین اگر درخواست ویرایش هریک از این فیلدها داده شده بود، باید پاسخی با کد 403 مبنی بر غیرمجاز بودن این درخواست به همراه پیام مناسبی نمایش داده شود.
+```json
+403 Forbidden
+----------------
+{"message": "Cannot edit customer's identity and credentials."}
+
+``` 
+
+در نهایت، اگر به هر دلیل دیگری درخواست ویرایش قابل قبول نبود (مثلا داده‌های ورودی اعتبار لازم را نداشتند یا فیلدهای ذکرشده در بدنه درخواست صحیح نبودند)، پاسخی با کد 400 و پیام مناسب ارسال شود.
+```json
+400 Bad Request
+----------------
+{"message": "Balance should be integer. (or other messages)"}
+
+```
+
+
 ## TODO
 - [x] Modeling
 - [x] Products management
@@ -263,7 +316,7 @@ POST /accounts/customer/register/
     - [x] Registering new Customer
     - [x] List of Customers, and search them
     - [x] Getting some specific Customer's details.
-    - [ ] Editing some specific Customer's details.
+    - [x] Editing some specific Customer's details.
     - [ ] Log in
     - [ ] Log out
     - [ ] Customer's profile
