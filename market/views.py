@@ -21,6 +21,7 @@ def product_insert(request):
     return JsonResponse({'id':product.id}, status=201)
 
 
+@csrf_exempt
 def product_list(request):
     products = Product.objects.all()
 
@@ -29,6 +30,7 @@ def product_list(request):
     return JsonResponse({'products': [product.to_dict() for product in products]}, status=200)
 
 
+@csrf_exempt
 def product_info(request, product_id):
     try:
         res = Product.objects.get(id=product_id)
