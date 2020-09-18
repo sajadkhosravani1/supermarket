@@ -35,3 +35,23 @@ def product_info(request, product_id):
         return JsonResponse(res.to_dict(), status=200)
     except Product.DoesNotExist:
         return JsonResponse({"message": "Product Not Found."}, status=404)
+
+
+@csrf_exempt
+def product_editInventory(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return JsonResponse({"message": "Product Not Found."}, status=404)
+
+    amount = json.loads(request.body.decode('utf-8'))['amount']
+    try:
+        if amount > 0:
+            product.increase_inventory(amount)
+        else:
+            amount *= -1
+            product.decrease_inventory(amount)
+    except Exception as e:
+        return JsonResponse({'message': str(e)}, status=400)
+
+    return JsonResponse(product.to_dict(), status=200)
