@@ -141,6 +141,39 @@ POST /market/product/233/edit_inventory/
 }
 ```
 
+## Customers management
+
+### 1- Registering new Customer
+برای ثبت‌نام یک مشتری جدید، یک درخواست POST به آدرس زیر ارسال می‌شود. بدنه درخواست نیز به صورت JSON بوده و حاوی اطلاعات لازم برای تعریف مشتری و حساب کاربری او است.
+```json
+POST /accounts/customer/register/
+-----------------------------
+{
+    "username": "hamed",
+    "password": "123",
+    "first_name": "Hamed",
+    "last_name": "Moghimi",
+    "email": "hamed@example.com",
+    "phone": "021-22334455",
+    "address": "Tehran, No.1"
+}
+```
+
+پس از تشکیل حساب کاربری و تعریف مشتری در سامانه، اعتبار هدیه به او اختصاص می‌یابد. در این صورت پاسخ به صورت کد 201 و با بدنه‌ای حاوی شناسه نمونه جدیدی که از کلاس Customer ایجاد شده است، خواهد بود.
+
+```json
+201 Created
+----------------
+{"id": 12}
+```
+
+در صورتی که به هر دلیل، ساخت کاربر ممکن نشد نیز، باید پاسخی با کد 400 و پیامی مناسب ارائه شود.
+```json
+400 Bad Request
+----------------
+{"message": "Username already exists. (or other messages)"}
+```
+ 
 
 
 ## TODO
@@ -151,7 +184,7 @@ POST /market/product/233/edit_inventory/
     - [x] Getting some specific Product's details.
     - [x] Changing some specific Product's inventory.
 - [ ] Customers management
-    - [ ] Registering new Customer
+    - [x] Registering new Customer
     - [ ] List of Customers, and search them
     - [ ] Getting some specific Customer's details.
     - [ ] Editing some specific Customer's details.
