@@ -106,3 +106,58 @@ def customer_info(request, customer_id):
         return JsonResponse(res.to_dict(), status=200)
     except Customer.DoesNotExist:
         return JsonResponse({"message": "Customer Not Found."}, status=404)
+
+
+@csrf_exempt
+def customer_edit(request, customer_id):
+    try:
+        customer = Customer.objects.get(id=customer_id)
+    except Customer.DoesNotExist:
+        return JsonResponse({"message": "Customer Not Found."}, status=404)
+
+    if 'username' in args or 'password' in dict or 'id' in dict:
+        return JsonResponse({"message": "Cannot edit customer's identity and credentials."},
+                            status=403)
+
+    import copy
+    user_before = copy.copy(customer.user)
+
+    args = json.loads(request.body.decode('utf-8'))
+    changed = False
+    if 'first_name' in args:
+        customer.user.first_name = args['first_name']
+        changed = True
+    if 'last_name' in args:
+        customer.user.last_name = args['last_name']
+        changed = True
+    if 'email' in args:
+        customer.user.email = args['email']
+        changed = True
+
+    try:
+        if changed:
+            customer.user.save()
+    except Exception:
+        return JsonResponse({"message":"Something is wrong."}, status=400)
+
+
+
+    changed = False
+
+    if 'address' in args:
+        customer.address = args['address']
+        changed = True
+    if 'balance' in args:
+        customer.balance = args['balance']
+        changed = True
+    if 'phone' in args:
+        customer.phone = args['phone']
+        changed = True
+    try:
+        if changed:
+            customer.save()
+    except Exception:
+        user_before.save()
+        return JsonResponse({"message":"Something is wrong."}, status=400)
+
+    return JsonResponse(customer.to_dict(), status=200)
