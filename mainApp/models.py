@@ -71,6 +71,10 @@ class Product(models.Model):
         else: raise Exception("Product inventory is not enough.")
         pass
 
+    def to_dict(self):
+        return {'id': self.id, 'code':self.code, 'name': self.name,
+                'price': self.price, 'inventory':self.inventory}
+
     def __str__(self):
         return "Product{code:%s, name:%s, price:%i, inventory:%i}"\
                % (self.code, self.name, self.price, self.inventory)
