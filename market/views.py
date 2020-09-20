@@ -169,7 +169,9 @@ def customer_edit(request, customer_id):
 def customer_login(request):
     try:
         args = json.loads(request.body.decode('utf-8'))
-        if request.user.is_authenticated and request.user.is_active:
+        if not request.user.is_active:
+            return JsonResponse({"message": "User is deactivated."}, status=403)
+        if request.user.is_authenticated:
             return JsonResponse({"message": "Already authenticated."}, status=200)
         user = authenticate(request, username=args['username'],password=args['password'])
         if user is not None:
@@ -190,6 +192,17 @@ def customer_logout(request):
         if request.user.is_authenticated:
             logout(request)
             return JsonResponse({"message": "You are logged out successfully."}, status=200)
+        else:
+            return JsonResponse({"message": "You are not logged in."}, status=403)
+    except:
+        return JsonResponse({"message": "Something is wrong! please read the documentations."}, status=404)
+
+
+@csrf_exempt
+def customer_profile(request):
+    try:
+        if request.user.is_authenticated:
+            return JsonResponse(request.user.customer.to_dict(),status=200)
         else:
             return JsonResponse({"message": "You are not logged in."}, status=403)
     except:

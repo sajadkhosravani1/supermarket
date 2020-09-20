@@ -14,4 +14,5 @@ urlpatterns = [
     path('accounts/customer/<int:customer_id>/edit/', customer_edit, name='customer_edit'),
     path('accounts/customer/login/', customer_login, name='customer_login'),
     path('accounts/customer/logout/', customer_logout, name='customer_logout'),
+    path('accounts/customer/profile/', customer_profile, name='customer_profile'),
 ]
