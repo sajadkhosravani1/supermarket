@@ -304,7 +304,7 @@ POST /accounts/customer/12/edit/
 
 ```
 
-## Log in
+## Login
 برای ورود یک مشتری به حساب کاربری خود در سامانه، یک درخواست POST به آدرس زیر ارسال می‌شود. در بدنه درخواست، نام کاربری و گذرواژه مشتری قرار داده می‌گیرد.
 ```json
 POST /accounts/customer/login/
@@ -328,6 +328,28 @@ POST /accounts/customer/login/
 {"message": "You are logged in successfully."}
 
 ```
+
+##Logout
+برای خروج کاربری که پیش‌تر وارد شده است، یک درخواست POST بدون بدنه به آدرس زیر ارسال می‌شود.
+```json
+(after login)
+POST /accounts/customer/logout/
+-------------------------------
+{}
+ ```
+
+در پاسخ این درخواست، اگر کاربر قبلا وارد نشده بود، کد 403 و پیامی مناسب بازگردانده می‌شود. در غیر این صورت، علاوه بر آن‌که کاربر از سامانه logout می‌شود، کد 200 و پیام مناسبی بازگردانده می‌شود.
+```json
+403 Forbidden
+----------------
+{"message": "You are not logged in."}
+```
+ 
+```json
+200 OK
+----------------
+{"message": "You are logged out successfully."}
+```
 ## TODO
 - [x] Modeling
 - [x] Products management
@@ -340,7 +362,7 @@ POST /accounts/customer/login/
     - [x] List of Customers, and search them
     - [x] Getting some specific Customer's details.
     - [x] Editing some specific Customer's details.
-    - [x] Log in
-    - [ ] Log out
+    - [x] Login
+    - [x] Logout
     - [ ] Customer's profile
 - [ ] Orders management
