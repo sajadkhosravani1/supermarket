@@ -1,6 +1,7 @@
-from django.http import JsonResponse,HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.db.utils import IntegrityError
+from django.contrib.auth import authenticate, login
 import json
 from .models import *
 
@@ -72,7 +73,7 @@ def customer_register(request):
         user.save()
     except IntegrityError:
         return JsonResponse({"message": "Username already exists."}, status=400)
-    except Exceptoin:
+    except Exception:
         return JsonResponse({"message": "Something is wrong!"}, status=400)
 
     try:
@@ -110,12 +111,13 @@ def customer_info(request, customer_id):
 
 @csrf_exempt
 def customer_edit(request, customer_id):
+    args = json.loads(request.body.decode('utf-8'))
     try:
         customer = Customer.objects.get(id=customer_id)
     except Customer.DoesNotExist:
         return JsonResponse({"message": "Customer Not Found."}, status=404)
 
-    if 'username' in args or 'password' in dict or 'id' in dict:
+    if 'username' in args or 'password' in args or 'id' in args:
         return JsonResponse({"message": "Cannot edit customer's identity and credentials."},
                             status=403)
 
@@ -161,3 +163,20 @@ def customer_edit(request, customer_id):
         return JsonResponse({"message":"Something is wrong."}, status=400)
 
     return JsonResponse(customer.to_dict(), status=200)
+
+
+@csrf_exempt
+def customer_login(request):
+    # try:
+    args = json.loads(request.body.decode('utf-8'))
+    if request.user.is_authenticated and request.user.is_active:
+        return JsonResponse({"message": "Already authenticated."}, status=200)
+    user = authenticate(request, username=args['username'],password=args['password'])
+    if user is not None:
+        login(request, user)
+        return JsonResponse({"message": "You are logged in successfully."}, status=200)
+    else:
+        return JsonResponse({"message": "Username or Password is incorrect."}, status=404)
+    # except Exception as e:
+    #     raise e
+    #     return JsonResponse({"message": "Something is Wrong! please read documentations."}, status=404)
