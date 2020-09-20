@@ -304,7 +304,30 @@ POST /accounts/customer/12/edit/
 
 ```
 
+## Log in
+برای ورود یک مشتری به حساب کاربری خود در سامانه، یک درخواست POST به آدرس زیر ارسال می‌شود. در بدنه درخواست، نام کاربری و گذرواژه مشتری قرار داده می‌گیرد.
+```json
+POST /accounts/customer/login/
+-------------------------------
+{
+    "username": "hamed",
+    "password": "123"
+}
+```
+ 
+در پاسخ این درخواست، اگر مشخصات نادرست بود، کد 404 و پیامی مناسب بازگردانده می‌شود. اگر اطلاعات صحیح بود، علاوه بر ارسال کد 200 به پیام مناسب، کاربر در سامانه وارد شده و اطلاعات نشست در کوکی برای کاربر ارسال می‌شود. به بیانی دیگر، از مکانیزم پیش‌فرض ورود و خروج کاربران در جنگو استفاده شود.
+```json
+404 Not Found
+----------------
+{"message": "Username or Password is incorrect."}
 
+ ```
+```json
+200 OK
+----------------
+{"message": "You are logged in successfully."}
+
+```
 ## TODO
 - [x] Modeling
 - [x] Products management
@@ -317,7 +340,7 @@ POST /accounts/customer/12/edit/
     - [x] List of Customers, and search them
     - [x] Getting some specific Customer's details.
     - [x] Editing some specific Customer's details.
-    - [ ] Log in
+    - [x] Log in
     - [ ] Log out
     - [ ] Customer's profile
 - [ ] Orders management
