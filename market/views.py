@@ -5,7 +5,9 @@ from django.contrib.auth import authenticate, login, logout
 import json
 from .models import *
 
+
 # Products
+
 
 @csrf_exempt
 def product_insert(request):
@@ -62,6 +64,7 @@ def product_editInventory(request, product_id):
 
 
 # Customers
+
 
 @csrf_exempt
 def customer_register(request):
@@ -124,7 +127,6 @@ def customer_edit(request, customer_id):
     import copy
     user_before = copy.copy(customer.user)
 
-    args = json.loads(request.body.decode('utf-8'))
     changed = False
     if 'first_name' in args:
         customer.user.first_name = args['first_name']
@@ -200,10 +202,7 @@ def customer_logout(request):
 
 @csrf_exempt
 def customer_profile(request):
-    try:
-        if request.user.is_authenticated:
-            return JsonResponse(request.user.customer.to_dict(),status=200)
-        else:
-            return JsonResponse({"message": "You are not logged in."}, status=403)
-    except:
-        return JsonResponse({"message": "Something is wrong! please read the documentations."}, status=404)
+    if request.user.is_authenticated:
+        return JsonResponse(request.user.customer.to_dict(),status=200)
+    else:
+        return JsonResponse({"message": "You are not logged in."}, status=403)

@@ -387,7 +387,7 @@ POST /accounts/customer/logout/
     - [x] List of Products, and search them.
     - [x] Getting some specific Product's details.
     - [x] Changing some specific Product's inventory.
-- [ ] Customers management
+- [x] Customers management
     - [x] Registering new Customer
     - [x] List of Customers, and search them
     - [x] Getting some specific Customer's details.
