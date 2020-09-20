@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.db.utils import IntegrityError
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 import json
 from .models import *
 
@@ -167,16 +167,30 @@ def customer_edit(request, customer_id):
 
 @csrf_exempt
 def customer_login(request):
-    # try:
-    args = json.loads(request.body.decode('utf-8'))
-    if request.user.is_authenticated and request.user.is_active:
-        return JsonResponse({"message": "Already authenticated."}, status=200)
-    user = authenticate(request, username=args['username'],password=args['password'])
-    if user is not None:
-        login(request, user)
-        return JsonResponse({"message": "You are logged in successfully."}, status=200)
-    else:
-        return JsonResponse({"message": "Username or Password is incorrect."}, status=404)
-    # except Exception as e:
-    #     raise e
-    #     return JsonResponse({"message": "Something is Wrong! please read documentations."}, status=404)
+    try:
+        args = json.loads(request.body.decode('utf-8'))
+        if request.user.is_authenticated and request.user.is_active:
+            return JsonResponse({"message": "Already authenticated."}, status=200)
+        user = authenticate(request, username=args['username'],password=args['password'])
+        if user is not None:
+            login(request, user)
+            return JsonResponse({"message": "You are logged in successfully."}, status=200)
+        else:
+            return JsonResponse({"message": "Username or Password is incorrect."}, status=404)
+    except:
+        return JsonResponse({"message": "Something is wrong! please read the documentations."}, status=404)
+
+
+@csrf_exempt
+def customer_logout(request):
+    try:
+        args = json.loads(request.body.decode('utf-8'))
+        if request.method != "POST" or len(args) > 0:
+            raise Exception("")
+        if request.user.is_authenticated:
+            logout(request)
+            return JsonResponse({"message": "You are logged out successfully."}, status=200)
+        else:
+            return JsonResponse({"message": "You are not logged in."}, status=403)
+    except:
+        return JsonResponse({"message": "Something is wrong! please read the documentations."}, status=404)
