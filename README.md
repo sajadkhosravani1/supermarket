@@ -350,6 +350,36 @@ POST /accounts/customer/logout/
 ----------------
 {"message": "You are logged out successfully."}
 ```
+
+## Customer's profile
+برای مشاهده نمایه کاربری که پیش‌تر وارد سامانه شده است، یک درخواست GET بدون ورودی به آدرس زیر ارسال می‌شود.
+
+`(after login)` 
+`GET /accounts/customer/profile/`
+ 
+
+در پاسخ این درخواست، اگر کاربر قبلا وارد نشده بود، کد 403 و پیامی مناسب بازگردانده می‌شود. در غیر این صورت، کد 200 به همراه اطلاعات هویتی و نمایه کاربر حاضر (مشابه بخش ۳) بازگردانده می‌شود.
+```json
+403 Forbidden
+----------------
+{"message": "You are not logged in."}
+
+ ```
+```json
+200 OK
+----------------
+{
+    "id": 12,
+    "username": "hamed",
+    "first_name": "Hamed",
+    "last_name": "Moghimi",
+    "email": "hamed@example.com",
+    "phone": "021-22334455",
+    "address": "Tehran, No.1",
+    "balance": 20000
+}
+```
+
 ## TODO
 - [x] Modeling
 - [x] Products management
@@ -364,5 +394,5 @@ POST /accounts/customer/logout/
     - [x] Editing some specific Customer's details.
     - [x] Login
     - [x] Logout
-    - [ ] Customer's profile
+    - [x] Customer's profile
 - [ ] Orders management
