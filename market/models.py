@@ -28,8 +28,10 @@ class Customer(models.Model):
         :param amount:int
         :return:void
         """
-        if self.balance >= amount : self.balance -= amount
-        else : raise Exception("Customer balance is not enough!")
+        if self.balance >= amount:
+            self.balance -= amount
+        else:
+            raise Exception("Customer balance is not enough!")
         pass
 
     def __str__(self):
@@ -61,31 +63,34 @@ class Product(models.Model):
     price = models.PositiveIntegerField()
     inventory = models.PositiveIntegerField(default=0, null=True)
 
-    def increase_inventory(self, amount:int):
+    def increase_inventory(self, amount: int):
         """ increases inventory by count of <amount>
         :param amount:int
         :return:void
         """
-        if amount < 1 : raise Exception('Invalid input.')
+        if amount < 1:
+            raise Exception('Invalid input.')
         self.inventory += amount
         self.save()
         pass
 
-    def decrease_inventory(self, amount:int):
+    def decrease_inventory(self, amount: int):
         """ decreases inventory by count of <amount>
         :param amount: positive int
         :return:void
         """
-        if amount < 1: raise Exception('Invalid input.')
-        if self.inventory >= amount :
+        if amount < 1:
+            raise Exception('Invalid input.')
+        if self.inventory >= amount:
             self.inventory -= amount
             self.save()
-        else: raise Exception("Product inventory is not enough.")
+        else:
+            raise Exception("Product inventory is not enough.")
         pass
 
     def to_dict(self):
-        return {'id': self.id, 'code':self.code, 'name': self.name,
-                'price': self.price, 'inventory':self.inventory}
+        return {'id': self.id, 'code': self.code, 'name': self.name,
+                'price': self.price, 'inventory': self.inventory}
 
     def __str__(self):
         return "Product{code:%s, name:%s, price:%i, inventory:%i}"\
@@ -135,7 +140,7 @@ class Order(models.Model):
         return order
         pass
 
-    def add_product(self, product: Product, amount:int):
+    def add_product(self, product: Product, amount: int):
         """Adds <amount> number of <product> into order card.
         :param product:Product
         :param amount:int
@@ -171,7 +176,7 @@ class Order(models.Model):
             raise Exception("Wrong operation.")
 
         if product in [item.product for item in self.rows]:
-            order_row= self.getOrderRow(product)
+            order_row = self.getOrderRow(product)
             if amount is None:
                 order_row.delete()
                 self.rows.remove(order_row)
@@ -181,7 +186,8 @@ class Order(models.Model):
             else:
                 raise Exception("Entered amount is much than the amount in the card.")
 
-        else: raise Exception("There is no such product in customer's card.")
+        else:
+            raise Exception("There is no such product in customer's card.")
 
         from django.utils import timezone
         self.order_time = timezone.now()
@@ -207,13 +213,14 @@ class Order(models.Model):
 
         temporarily_reduced = list()
 
-        def recharge_inventories(max):
+        def recharge_inventories(max_):
             """Increases inventories by reduced value, for all of manipulated products.
-            :param max:int last index of manipulated products in orderRows list. #exlusive!"""
+            :param max_:int last index of manipulated products in orderRows list. #exlusive!"""
             j = 0
-            for order_row in self.rows:
-                if j == max: break
-                order_row.product.increase_inventory(temporarily_reduced[j])
+            for order_row_ in self.rows:
+                if j == max_:
+                    break
+                order_row_.product.increase_inventory(temporarily_reduced[j])
                 j += 1
 
         i = 0
@@ -222,7 +229,8 @@ class Order(models.Model):
                 recharge_inventories(i)
                 raise Exception(
                     """The product \"%s\" has been bought by other customers while you where shopping. 
-                    Now the product's inventory is %n numbers.""" % (order_row.product.name, order_row.product.inventory))
+                    Now the product's inventory is %i numbers.""" \
+                    % (order_row.product.name, order_row.product.inventory))
             else:
                 temporarily_reduced.append(order_row.amount)
                 order_row.product.decrease_inventory(order_row.amount)
@@ -272,21 +280,25 @@ class Order(models.Model):
         self.save()
         pass
 
-    def getOrderRow(self,product:Product):
+    def getOrderRow(self, product: Product):
         for orderRow in self.rows:
             if orderRow.product == product:
                 return orderRow
         return None
 
     def __str__(self):
+        dic = dict(Order.status_choices)
         return "Order{customer:%s, order_time:%s, rows:%s, status:%s, total_price:%i}"\
-            % (str(self.customer), str(self.order_time), str(self.rows), self.total_price)
+            % (str(self.customer), str(self.order_time), str(self.rows), dic[self.status], self.total_price)
 
-    def to_dict(self):
-        return {
+    def to_dict(self, errors=None):
+        out = {
             'total_price': self.total_price,
             'items': [item.to_dict() for item in OrderRow.objects.filter(order=self.id)]
         }
+        if errors:
+            out['errors'] = errors
+        return out
 
 
 class OrderRow(models.Model):
