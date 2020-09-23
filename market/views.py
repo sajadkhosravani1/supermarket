@@ -224,30 +224,48 @@ def shopping_cart(request):
 @csrf_exempt
 def shopping_add_items(request):
     if request.method != 'POST':
-        return JsonResponse({'Message': 'Wrong method.'}, status=404)
+        return JsonResponse({'message': 'Wrong method.'}, status=404)
 
-    if request.user.is_authenticated and request.user.is_active:
-        raw_json = request.body.decode('utf-8')
-        if len(raw_json) == 0:
-            return JsonResponse({'Message': 'Not able to read your request body.'}, status=404)
-        arr = json.loads(raw_json)
-
-        from django.db.models import Q
-        order = Order.objects.filter(Q(status=Order.STATUS_SHOPPING) | Q(status=Order.STATUS_SUBMITTED)) \
-            .get(customer=request.user.customer)
-
-        errors = []
-        for item in arr:
+    try:
+        if request.user.is_authenticated and request.user.is_active:
+            raw_json = request.body.decode('utf-8')
             try:
-                order.add_product(Product.objects.get(code=item['code']),item['amount'])
-            except Exception as e:
-                errors.append({'code': item['code'],
-                               'message': str(e)})
+                arr = json.loads(raw_json)
+                if not isinstance(arr, list):
+                    raise Exception()
+            except:
+                return JsonResponse({'message': 'Not able to read your request body.'}, status=404)
+
+            from django.db.models import Q
+            order = Order.objects.filter(Q(status=Order.STATUS_SHOPPING) | Q(status=Order.STATUS_SUBMITTED)) \
+                .get(customer=request.user.customer)
+
+            errors = []
+            for item in arr:
+                if 'code' in item and 'amount' not in item:
+                    errors.append({'code': item['code'],
+                                   'message': 'Item has no "amount" property.'})
+                    continue
+                if 'code' not in item:
+                    errors.append({'code': '?',
+                                   'message': 'Item has no "code" property.'})
+                    continue
+
+                try:
+                    if Product.objects.filter(code=item['code']).exists():
+                        order.add_product(Product.objects.get(code=item['code']), item['amount'])
+                    else:
+                        raise Exception("No such product.")
+                except Exception as e:
+                    errors.append({'code': item['code'], 'message': str(e)})
 
             if errors:
                 return JsonResponse(order.to_dict(errors), status=400)
             else:
                 return JsonResponse(order.to_dict(), status=200)
 
-    else:
-        return JsonResponse({"message": "You are not logged in."}, status=403)
+        else:
+            return JsonResponse({"message": "You are not logged in."}, status=403)
+    except Exception:
+        JsonResponse({"message": "Something is wrong."}, status=404)
+
