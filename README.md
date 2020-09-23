@@ -380,6 +380,37 @@ POST /accounts/customer/logout/
 }
 ```
 
+## Orders management
+
+# Viewing cart
+برای مشاهده سبد خرید کاربر حاضر، درخواست GET به آدرس زیر ارسال می‌شود.
+`(login required)`
+`GET /market/shopping/cart/`
+
+کد پاسخ برابر 200 و بدنه پاسخ حاوی اطلاعات سبد خرید کاربر، شامل فهرستی از کالاهای موجود در سبد (کد کالا، نام کالا، قیمت واحد کالا و مقدار کالا در سبد) و مبلغ کل سبد خرید خواهد بود.
+
+
+```json
+200 OK
+----------------
+{
+    "total_price": 9000,
+    "items": [
+        {
+            "code": "1111",
+            "name": "Milk",
+            "price": 1000,
+            "amount": 1
+        },
+        {
+            "code": "2222",
+            "name": "Rice",
+            "price": 2000,
+            "amount": 4
+        }
+    ]
+}
+```
 ## TODO
 - [x] Modeling
 - [x] Products management
@@ -396,7 +427,7 @@ POST /accounts/customer/logout/
     - [x] Logout
     - [x] Customer's profile
 - [ ] Orders management
-    - [ ] Viewing cart
+    - [x] Viewing cart
     - [ ] Adding to cart
     - [ ] Deleting from cart
     - [ ] Submitting the order
