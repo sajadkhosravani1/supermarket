@@ -156,6 +156,7 @@ class Order(models.Model):
 
         from django.utils import timezone
         self.order_time = timezone.now()
+        self.total_price += product.price
         self.save()
         pass
 
@@ -184,6 +185,7 @@ class Order(models.Model):
 
         from django.utils import timezone
         self.order_time = timezone.now()
+        self.total_price -= product.price
         self.save()
 
         pass
