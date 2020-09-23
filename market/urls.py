@@ -18,4 +18,5 @@ urlpatterns = [
 
     path('market/shopping/cart/', shopping_cart, name='shopping_cart'),
     path('market/shopping/cart/add_items/', shopping_add_items, name='shopping_add_items'),
+    path('market/shopping/cart/remove_items/', shopping_remove_items, name='shopping_remove_items'),
 ]

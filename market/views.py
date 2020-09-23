@@ -269,3 +269,48 @@ def shopping_add_items(request):
     except Exception:
         JsonResponse({"message": "Something is wrong."}, status=404)
 
+
+@csrf_exempt
+def shopping_remove_items(request):
+    if request.method != 'POST':
+        return JsonResponse({'message': 'Wrong method.'}, status=404)
+    try:
+        if request.user.is_authenticated and request.user.is_active:
+            raw_json = request.body.decode('utf-8')
+            try:
+                arr = json.loads(raw_json)
+                if not isinstance(arr, list):
+                    raise Exception()
+            except:
+                return JsonResponse({'message': 'Not able to read your request body.'}, status=404)
+
+            from django.db.models import Q
+            order = Order.objects.filter(Q(status=Order.STATUS_SHOPPING) | Q(status=Order.STATUS_SUBMITTED)) \
+                .get(customer=request.user.customer)
+
+            errors = []
+            for item in arr:
+                try:
+                    if 'code' not in item:
+                        errors.append({'code': '?',
+                                       'message': 'Item has no "code" property.'})
+                        continue
+
+                    if Product.objects.filter(code=item['code']).exists():
+                        if 'amount' not in item:
+                            item['amount'] = None
+                        order.remove_product(Product.objects.get(code=item['code']), item['amount'])
+                    else:
+                        raise Exception("No such product.")
+                except Exception as e:
+                    errors.append({'code': item['code'], 'message': str(e)})
+
+            if errors:
+                return JsonResponse(order.to_dict(errors), status=400)
+            else:
+                return JsonResponse(order.to_dict(), status=200)
+
+        else:
+            return JsonResponse({"message": "You are not logged in."}, status=403)
+    except Exception:
+        JsonResponse({"message": "Something is wrong."}, status=404)
