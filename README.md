@@ -304,7 +304,7 @@ POST /accounts/customer/12/edit/
 
 ```
 
-## Login
+## 5- Login
 برای ورود یک مشتری به حساب کاربری خود در سامانه، یک درخواست POST به آدرس زیر ارسال می‌شود. در بدنه درخواست، نام کاربری و گذرواژه مشتری قرار داده می‌گیرد.
 ```json
 POST /accounts/customer/login/
@@ -329,7 +329,7 @@ POST /accounts/customer/login/
 
 ```
 
-##Logout
+## 6- Logout
 برای خروج کاربری که پیش‌تر وارد شده است، یک درخواست POST بدون بدنه به آدرس زیر ارسال می‌شود.
 ```json
 (after login)
@@ -351,7 +351,7 @@ POST /accounts/customer/logout/
 {"message": "You are logged out successfully."}
 ```
 
-## Customer's profile
+## 7- Customer's profile
 برای مشاهده نمایه کاربری که پیش‌تر وارد سامانه شده است، یک درخواست GET بدون ورودی به آدرس زیر ارسال می‌شود.
 
 `(after login)` 
@@ -483,9 +483,9 @@ POST /market/shopping/cart/add_items/
 ]
 ```
  
-
-400 Bad Request
-----------------
+`400 Bad Request`
+----
+```json
 {
     "total_price": 14000,
     "errors": [
@@ -519,8 +519,105 @@ POST /market/shopping/cart/add_items/
         }
     ]
 }
+```
 
+### 3- Deleting from cart
+
+برای حذف تعدادی کالا از سبد خرید، یک درخواست POST به آدرس زیر ارسال می‌شود. بدنه درخواست شامل فهرستی از اقلام مورد نظر برای حذف از سبد (شامل کد کالا و در برخی موارد، مقدار کالا) است. اگر مقداری برای یک کالا درج نشده باشد، منظور آن است که آن کالا به صورت کامل از سبد خرید حذف شود.
+```json
+(login required)
+POST /market/shopping/cart/remove_items/
+-----------------------------
+[
+    {
+        "code": "1111",
+    },
+    {
+        "code": "2222",
+        "amount": 2
+    }
+]
+```
  
+
+قالب و قوانین خروجی این درخواست، کاملا مشابه درخواست افزودن کالا (بخش قبل) است. بنابراین اگر تمامی اقلام به درستی از سبد حذف شدند، کد پاسخ 200 خواهد بود و در بدنه نیز، وضعیت جدید سبد خرید گزارش می‌شود.
+`200 OK`
+---
+```json
+{
+    "total_price": 4000,
+    "items": [
+        {
+            "code": "2222",
+            "name": "Rice",
+            "price": 2000,
+            "amount": 2
+        }
+    ]
+}
+```
+ 
+
+همچنین در صورتی که به هر دلیل امکان پردازش برخی از اقلام درخواست وجود نداشت، باید به اقلام دیگر درخواست که امکان پردازش دارند، رسیدگی شود. در چنین حالتی، کد پاسخ باید 400 باشد و در بدنه پاسخ، وضعیت جدید سبد خرید به همراه مقدار errors قرار می‌گیرد.
+
+`(login required)
+POST /market/shopping/cart/remove_items/`
+---
+```json
+[
+    {
+        "code": "1111",
+        "amount": 20
+    },
+    {
+        "code": "3333",
+        "amount": 1
+    },
+    {
+        "code": "4444"
+    },
+    {
+        "code": "9999"
+    }
+]
+```
+ 
+`
+400 Bad Request`
+---
+```json
+{
+    "total_price": 7000,
+    "errors": [
+        {
+            "code": "1111",
+            "message": "Not enough amount in cart."
+        },
+        {
+            "code": "4444",
+            "message": "Product not found in cart."
+        },
+        {
+            "code": "9999",
+            "message": "Product not found."
+        }
+    ],
+    "items": [
+        {
+            "code": "1111",
+            "name": "Milk",
+            "price": 1000,
+            "amount": 1
+        },
+        {
+            "code": "2222",
+            "name": "Rice",
+            "price": 2000,
+            "amount": 3
+        }
+    ]
+}
+``` 
 
 
 ## TODO
@@ -541,5 +638,5 @@ POST /market/shopping/cart/add_items/
 - [ ] Orders management
     - [x] Viewing cart
     - [x] Adding to cart
-    - [ ] Deleting from cart
+    - [x] Deleting from cart
     - [ ] Submitting the order
