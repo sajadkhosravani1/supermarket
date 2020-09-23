@@ -382,7 +382,7 @@ POST /accounts/customer/logout/
 
 ## Orders management
 
-# Viewing cart
+### 1- Viewing cart
 برای مشاهده سبد خرید کاربر حاضر، درخواست GET به آدرس زیر ارسال می‌شود.
 `(login required)`
 `GET /market/shopping/cart/`
@@ -411,6 +411,118 @@ POST /accounts/customer/logout/
     ]
 }
 ```
+
+### 2- Adding to cart
+
+برای افزودن تعدادی کالا به سبد خرید، یک درخواست POST به آدرس زیر ارسال می‌شود. بدنه درخواست شامل فهرستی از اقلام مورد نظر برای افزودن به سبد (شامل کد کالا و مقدار کالا) است. بدیهی است که ممکن است هریک از کالاهای مورد نظر کاربر قبلا هم در سبد موجود باشد یا برای اولین باز به سبد اضافه شود.
+```json
+(login required)
+POST /market/shopping/cart/add_items/
+-----------------------------
+[
+    {
+        "code": "1111",
+        "amount": 2
+    },
+    {
+        "code": "3333",
+        "amount": 1
+    }
+]
+```
+ 
+
+در زمان پردازش این درخواست، تلاش می‌شود تا هریک از اقلام مدنظر کاربر به سبد خرید اضافه شوند. اگر تمامی اقلام به درستی به سبد اضافه شدند، کد پاسخ 200 خواهد بود و در بدنه نیز، وضعیت جدید سبد خرید گزارش می‌شود.
+
+```json
+200 OK
+----------------
+{
+    "total_price": 16000,
+    "items": [
+        {
+            "code": "1111",
+            "name": "Milk",
+            "price": 1000,
+            "amount": 3
+        },
+        {
+            "code": "2222",
+            "name": "Rice",
+            "price": 2000,
+            "amount": 4
+        },
+        {
+            "code": "3333",
+            "name": "SoyaMilk",
+            "price": 5000,
+            "amount": 1
+        }
+    ]
+}
+``` 
+
+در صورتی که به هر دلیل (مثل نبود کالایی با کد مدنظر کاربر یا نبود موجودی کافی برای یک کالا) امکان پردازش برخی از اقلام درخواست وجود نداشت، باید همچنان به اقلام دیگر درخواست که امکان پردازش دارند، رسیدگی شود. در چنین حالتی، کد پاسخ باید 400 باشد. همچنین در بدنه پاسخ، وضعیت جدید سبد خرید درج می‌شود؛ با این تفاوت که یک مقدار errors به خروجی اضافه می‌شود. این مقدار شامل فهرستی از کد کالاهایی که منجر به خطا شده‌اند، به همراه پیام مناسبی در خصوص هریک از آن‌ها خواهد بود. به مثال زیر توجه کنید.
+```json
+(login required)
+POST /market/shopping/cart/add_items/
+-----------------------------
+[
+    {
+        "code": "1111",
+        "amount": 20
+    },
+    {
+        "code": "3333",
+        "amount": 1
+    },
+    {
+        "code": "9999",
+        "amount": 2
+    }
+]
+```
+ 
+
+400 Bad Request
+----------------
+{
+    "total_price": 14000,
+    "errors": [
+        {
+            "code": "1111",
+            "message": "Not enough inventory."
+        },
+        {
+            "code": "9999",
+            "message": "Product not found."
+        }
+    ],
+    "items": [
+        {
+            "code": "1111",
+            "name": "Milk",
+            "price": 1000,
+            "amount": 1
+        },
+        {
+            "code": "2222",
+            "name": "Rice",
+            "price": 2000,
+            "amount": 4
+        },
+        {
+            "code": "3333",
+            "name": "SoyaMilk",
+            "price": 5000,
+            "amount": 1
+        }
+    ]
+}
+
+ 
+
+
 ## TODO
 - [x] Modeling
 - [x] Products management
@@ -428,6 +540,6 @@ POST /accounts/customer/logout/
     - [x] Customer's profile
 - [ ] Orders management
     - [x] Viewing cart
-    - [ ] Adding to cart
+    - [x] Adding to cart
     - [ ] Deleting from cart
     - [ ] Submitting the order
