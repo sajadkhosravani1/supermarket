@@ -17,4 +17,5 @@ urlpatterns = [
     path('accounts/customer/profile/', customer_profile, name='customer_profile'),
 
     path('market/shopping/cart/', shopping_cart, name='shopping_cart'),
+    path('market/shopping/cart/add_items/', shopping_add_items, name='shopping_add_items'),
 ]
