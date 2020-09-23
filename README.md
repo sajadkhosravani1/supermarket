@@ -571,7 +571,45 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 }
 ``` 
 
+### 4- Submitting the order
+ برای نهایی‌سازی خرید و ثبت سفارش، یک درخواست POST بدون بدنه به آدرس زیر ارسال می‌شود.
 
+`(login required)`
+`POST /market/shopping/submit/`
+```json
+{}
+```
+پس از دریافت این درخواست، موجودی کالاها از فروشگاه کم شده، مبلغ کل سفارش از اعتبار مشتری کسر شده و سفارشی با وضعیت ثبت‌شده برای مشتری ایجاد می‌شود. پاسخ این درخواست با کد 200 و بدنه‌ای حاوی اطلاعات کامل سفارش خواهد بود.
+
+`200 OK`
+```json
+{
+    "id": 11,
+    "order_time": "2019-12-16 14:32:11",
+    "status": "submitted",
+    "total_price": 7000,
+    "rows": [
+        {
+            "code": "1111",
+            "name": "Milk",
+            "price": 1000,
+            "amount": 1
+        },
+        {
+            "code": "2222",
+            "name": "Rice",
+            "price": 2000,
+            "amount": 3
+        }
+    ]
+}
+```
+اما در صورتی که به هر دلیلی امکان ثبت سفارش وجود نداشت، پاسخی با کد 400 و پیامی مناسب بازگردانده می‌شود.
+
+`400 Bad Request`
+```json
+{ "message": "Not enough money." }
+```
 ## TODO
 - [x] Modeling
 - [x] Products management
@@ -591,4 +629,4 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
     - [x] Viewing cart
     - [x] Adding to cart
     - [x] Deleting from cart
-    - [ ] Submitting the order
+    - [x] Submitting the order
