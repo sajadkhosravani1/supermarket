@@ -10,6 +10,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 
 ### 1- Defining new Product
 برای تعریف کالای جدید، یک درخواست POST به آدرس زیر ارسال می‌شود. بدنه درخواست نیز به صورت JSON بوده و حاوی اطلاعات لازم برای تعریف کالا است.
+
 `POST /market/product/insert/`
 ```json
 {
@@ -23,10 +24,12 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 همان‌طور که مشاهده می‌کنید، ممکن است فیلد inventory ارائه نشود. در این صورت باید مقدار پیش‌فرض (مطابق با تعریف مسئله در فاز اول) برای آن در نظر گرفته شود.
 
 در پاسخ این درخواست، اگر ثبت کالا موفقیت آمیز نبود (به دلیل تکراری‌بودن کد یا هر ممنوعیت دیگری) باید پاسخی با کد 400 و پیامی مناسب به صورت JSON ایجاد شود. اگر هم ثبت کالا موفقیت آمیز بود، کد پاسخ 201 بوده و در متن پاسخ، شناسه کالای ایجاد شده (فیلد id که توسط خود جنگو تنظیم شده و به عنوان کلید اصلی مدل در نظر گرفته می‌شود) قرار می‌گیرد.
+
 `400 Bad Request`
 ```json
 {"message": "Duplicate code (or other messages)"}
 ```
+
 `201 Created`
 ```json
 {"id": 234}
@@ -95,6 +98,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 
 ### 4- Changing some specific Product's inventory.
 برای تغییر موجودی یک کالای خاص، یک درخواست POST به آدرس زیر ارسال می‌شود (مقدار 233 شبیه بخش قبل، به عنوان مثالی از شناسه کالا قرار گرفته است). در بدنه درخواست مقدار تغییر در موجودی قرار می‌گیرد. مقدار مثبت به منزله افزایش موجودی و مقدار منفی به معنی برداشت از موجودی فروشگاه است.
+
 `POST /market/product/233/edit_inventory/`
 ```json
 {"amount": 200}
@@ -132,6 +136,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 
 ### 1- Registering new Customer
 برای ثبت‌نام یک مشتری جدید، یک درخواست POST به آدرس زیر ارسال می‌شود. بدنه درخواست نیز به صورت JSON بوده و حاوی اطلاعات لازم برای تعریف مشتری و حساب کاربری او است.
+
 `POST /accounts/customer/register/`
 ```json
 {
@@ -153,6 +158,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 ```
 
 در صورتی که به هر دلیل، ساخت کاربر ممکن نشد نیز، باید پاسخی با کد 400 و پیامی مناسب ارائه شود.
+
 `400 Bad Request`
 ```json
 {"message": "Username already exists. (or other messages)"}
@@ -217,6 +223,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 ```json
 {"message": "Customer Not Found."}
 ``` 
+
 `200 OK`
 ```json
 {
@@ -235,6 +242,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 
 ## 4- Editing some specific Customer's details
 برای ویرایش اطلاعات یک مشتری، یک درخواست POST به آدرس زیر ارسال می‌شود. در بخش آخر آدرس، شماره شناسه مشتری (در مثال زیر، 12) قرار می‌گیرد. در بدنه درخواست نیز، اطلاعات جدید مشتری قرار داده می‌شود.
+
 `POST /accounts/customer/12/edit/`
 ```json
 {
@@ -246,10 +254,12 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 ```
  
 در پاسخ این درخواست، اگر یک مشتری با این شناسه وجود نداشت، کد 404 و پیامی مناسب بازگردانده می‌شود. اگر ویرایش اطلاعات مشتری با موفقیت انجام شود، کد 200 به همراه اطلاعات جدید مشتری در پاسخ ارائه می‌شود.
+
 `404 Not Found`
 ```json
 {"message": "Customer Not Found."}
  ```
+
 `200 OK`
 ```json
 {
@@ -265,12 +275,14 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 ```
  
 اما دو حالت دیگر نیز برای این درخواست باید در نظر گرفته شود. اول آن‌که اطلاعات احراز هویت مشتری در سامانه (یعنی شناسه مشتری، نام کاربری و گذرواژه) قابل ویرایش نیست. بنابراین اگر درخواست ویرایش هریک از این فیلدها داده شده بود، باید پاسخی با کد 403 مبنی بر غیرمجاز بودن این درخواست به همراه پیام مناسبی نمایش داده شود.
+
 `403 Forbidden`
 ```json
 {"message": "Cannot edit customer's identity and credentials."}
 ``` 
 
 در نهایت، اگر به هر دلیل دیگری درخواست ویرایش قابل قبول نبود (مثلا داده‌های ورودی اعتبار لازم را نداشتند یا فیلدهای ذکرشده در بدنه درخواست صحیح نبودند)، پاسخی با کد 400 و پیام مناسب ارسال شود.
+
 `400 Bad Request`
 ```json
 {"message": "Balance should be integer. (or other messages)"}
@@ -279,6 +291,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 
 ## 5- Login
 برای ورود یک مشتری به حساب کاربری خود در سامانه، یک درخواست POST به آدرس زیر ارسال می‌شود. در بدنه درخواست، نام کاربری و گذرواژه مشتری قرار داده می‌گیرد.
+
 `POST /accounts/customer/login/`
 ```json
 {
@@ -288,10 +301,12 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 ```
  
 در پاسخ این درخواست، اگر مشخصات نادرست بود، کد 404 و پیامی مناسب بازگردانده می‌شود. اگر اطلاعات صحیح بود، علاوه بر ارسال کد 200 به پیام مناسب، کاربر در سامانه وارد شده و اطلاعات نشست در کوکی برای کاربر ارسال می‌شود. به بیانی دیگر، از مکانیزم پیش‌فرض ورود و خروج کاربران در جنگو استفاده شود.
+
 `404 Not Found`
 ```json
 {"message": "Username or Password is incorrect."}
  ```
+
 `200 OK`
 ```json
 {"message": "You are logged in successfully."}
@@ -299,7 +314,9 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 
 ## 6- Logout
 برای خروج کاربری که پیش‌تر وارد شده است، یک درخواست POST بدون بدنه به آدرس زیر ارسال می‌شود.
+
 `(after login)`
+
 `POST /accounts/customer/logout/`
 ```json
 {}
@@ -320,9 +337,11 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 برای مشاهده نمایه کاربری که پیش‌تر وارد سامانه شده است، یک درخواست GET بدون ورودی به آدرس زیر ارسال می‌شود.
 
 `(after login)` 
+
 `GET /accounts/customer/profile/`
  
 در پاسخ این درخواست، اگر کاربر قبلا وارد نشده بود، کد 403 و پیامی مناسب بازگردانده می‌شود. در غیر این صورت، کد 200 به همراه اطلاعات هویتی و نمایه کاربر حاضر (مشابه بخش ۳) بازگردانده می‌شود.
+
 `403 Forbidden`
 ```json
 {"message": "You are not logged in."}
@@ -346,6 +365,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 
 ### 1- Viewing cart
 برای مشاهده سبد خرید کاربر حاضر، درخواست GET به آدرس زیر ارسال می‌شود.
+
 `(login required)`
 `GET /market/shopping/cart/`
 
@@ -376,7 +396,9 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 ### 2- Adding to cart
 
 برای افزودن تعدادی کالا به سبد خرید، یک درخواست POST به آدرس زیر ارسال می‌شود. بدنه درخواست شامل فهرستی از اقلام مورد نظر برای افزودن به سبد (شامل کد کالا و مقدار کالا) است. بدیهی است که ممکن است هریک از کالاهای مورد نظر کاربر قبلا هم در سبد موجود باشد یا برای اولین باز به سبد اضافه شود.
+
 `(login required)`
+
 `POST /market/shopping/cart/add_items/`
 ```json
 [
@@ -422,7 +444,9 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 ``` 
 
 در صورتی که به هر دلیل (مثل نبود کالایی با کد مدنظر کاربر یا نبود موجودی کافی برای یک کالا) امکان پردازش برخی از اقلام درخواست وجود نداشت، باید همچنان به اقلام دیگر درخواست که امکان پردازش دارند، رسیدگی شود. در چنین حالتی، کد پاسخ باید 400 باشد. همچنین در بدنه پاسخ، وضعیت جدید سبد خرید درج می‌شود؛ با این تفاوت که یک مقدار errors به خروجی اضافه می‌شود. این مقدار شامل فهرستی از کد کالاهایی که منجر به خطا شده‌اند، به همراه پیام مناسبی در خصوص هریک از آن‌ها خواهد بود. به مثال زیر توجه کنید.
+
 `(login required)`
+
 `POST /market/shopping/cart/add_items/`
 ```json
 [
@@ -483,6 +507,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 برای حذف تعدادی کالا از سبد خرید، یک درخواست POST به آدرس زیر ارسال می‌شود. بدنه درخواست شامل فهرستی از اقلام مورد نظر برای حذف از سبد (شامل کد کالا و در برخی موارد، مقدار کالا) است. اگر مقداری برای یک کالا درج نشده باشد، منظور آن است که آن کالا به صورت کامل از سبد خرید حذف شود.
 
 `(login required)`
+
 `POST /market/shopping/cart/remove_items/`
 ```json
 [
@@ -516,6 +541,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 همچنین در صورتی که به هر دلیل امکان پردازش برخی از اقلام درخواست وجود نداشت، باید به اقلام دیگر درخواست که امکان پردازش دارند، رسیدگی شود. در چنین حالتی، کد پاسخ باید 400 باشد و در بدنه پاسخ، وضعیت جدید سبد خرید به همراه مقدار errors قرار می‌گیرد.
 
 `(login required)`
+
 `POST /market/shopping/cart/remove_items/`
 ```json
 [
