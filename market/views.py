@@ -175,7 +175,7 @@ def customer_login(request):
             return JsonResponse({"message": "User is deactivated."}, status=403)
         if request.user.is_authenticated:
             return JsonResponse({"message": "Already authenticated."}, status=200)
-        user = authenticate(request, username=args['username'],password=args['password'])
+        user = authenticate(request, username=args['username'], password=args['password'])
         if user is not None:
             login(request, user)
             return JsonResponse({"message": "You are logged in successfully."}, status=200)
@@ -203,6 +203,20 @@ def customer_logout(request):
 @csrf_exempt
 def customer_profile(request):
     if request.user.is_authenticated:
-        return JsonResponse(request.user.customer.to_dict(),status=200)
+        return JsonResponse(request.user.customer.to_dict(), status=200)
     else:
         return JsonResponse({"message": "You are not logged in."}, status=403)
+
+
+# Orders
+
+@csrf_exempt
+def shopping_cart(request):
+    if request.user.is_authenticated and request.user.is_active:
+        from django.db.models import Q
+        return JsonResponse(Order.objects.filter(Q(status=Order.STATUS_SHOPPING) | Q(status=Order.STATUS_SUBMITTED))\
+            .get(customer=request.user.customer),
+            status=200)
+    else:
+        return JsonResponse({"message": "You are not logged in."}, status=403)
+
