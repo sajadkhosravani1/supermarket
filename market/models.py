@@ -282,6 +282,12 @@ class Order(models.Model):
         return "Order{customer:%s, order_time:%s, rows:%s, status:%s, total_price:%i}"\
             % (str(self.customer), str(self.order_time), str(self.rows), self.total_price)
 
+    def to_dict(self):
+        return {
+            'total_price': self.total_price,
+            'items': [item.to_dict() for item in OrderRow.objects.filter(order=self.id)]
+        }
+
 
 class OrderRow(models.Model):
     """Represents orders one single item.
@@ -296,3 +302,11 @@ class OrderRow(models.Model):
     def __str__(self):
         return "OrderRow{product:%s, amount: %i}"\
                % (str(self.product), self.amount)
+
+    def to_dict(self):
+        return {
+            'code': self.product.code,
+            'name': self.product.name,
+            'price': self.product.price,
+            'amount': self.amount
+        }
