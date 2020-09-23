@@ -300,6 +300,15 @@ class Order(models.Model):
             out['errors'] = errors
         return out
 
+    def toDict(self):
+        return {
+            'id': self.id,
+            'order_time': str(self.order_time),
+            'status': dict(Order.status_choices)[self.status],
+            'total_price': self.total_price,
+            'rows': [item.to_dict() for item in OrderRow.objects.filter(order=self.id)]
+        }
+
 
 class OrderRow(models.Model):
     """Represents orders one single item.

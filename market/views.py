@@ -314,3 +314,26 @@ def shopping_remove_items(request):
             return JsonResponse({"message": "You are not logged in."}, status=403)
     except Exception:
         JsonResponse({"message": "Something is wrong."}, status=404)
+
+
+@csrf_exempt
+def shopping_submit(request):
+    if request.method != 'POST':
+        return JsonResponse({'message': 'Wrong method.'}, status=404)
+    try:
+        if request.user.is_authenticated and request.user.is_active:
+            raw_json = request.body.decode('utf-8')
+            if not isinstance(json.loads(raw_json), dict):
+                return JsonResponse({'message': 'Not able to read your request body.'}, status=404)
+
+            from django.db.models import Q
+            order = Order.objects.filter(Q(status=Order.STATUS_SHOPPING) | Q(status=Order.STATUS_SUBMITTED)) \
+                .get(customer=request.user.customer)
+            try:
+                order.submit()
+            except Exception as e:
+                return JsonResponse({"message": str(e)}, status=400)
+        else:
+            return JsonResponse({"message": "You are not logged in."}, status=403)
+    except Exception:
+        JsonResponse({"message": "Something is wrong."}, status=404)
