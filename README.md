@@ -1,7 +1,7 @@
 # Orders manager
 
 A django project for customers to order products.
-It's actually my final project for a [SUT](http://www.en.sharif.edu/) django course held by [maktabkhooneh](maktabkhooneh.org).
+It's actually my final project for a [SUT](http://www.en.sharif.edu/) django course held by [maktabkhooneh](http://maktabkhooneh.org).
 
 ## Modeling 
 ![image](https://maktabkhooneh.org/media/uploads/project_phase1_modeling.jpg)
@@ -396,3 +396,7 @@ POST /accounts/customer/logout/
     - [x] Logout
     - [x] Customer's profile
 - [ ] Orders management
+    - [ ] Viewing cart
+    - [ ] Adding to cart
+    - [ ] Deleting from cart
+    - [ ] Submitting the order
