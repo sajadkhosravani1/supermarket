@@ -103,7 +103,6 @@ class Order(models.Model):
     order_time : datetime - A time object representing order time.
     total_price = positive int - referring to total
     status = A specific integer (selected from class's constants) representing order's status.
-    rows = List of order rows.
     """
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     order_time = models.DateTimeField()
@@ -120,7 +119,6 @@ class Order(models.Model):
         (STATUS_SENT, "sent"),
     )
     status = models.IntegerField(choices=status_choices)
-    rows = list()
 
     @staticmethod
     def initiate(customer: Customer):
@@ -131,12 +129,13 @@ class Order(models.Model):
         """
         from django.utils import timezone
         if Order.STATUS_SHOPPING in [item.status for item in Order.objects.filter(customer=customer)]:
-            raise Exception("There's another shopping order for this customer.")
+            return Order.objects.filter(status=Order.STATUS_SHOPPING).get(customer=customer)
+
         order = Order(customer=customer,
                       status=Order.STATUS_SHOPPING,
                       order_time=timezone.now(), total_price=0)
-        order.rows = []
         order.save()
+        order.getRows()
         return order
         pass
 
@@ -150,18 +149,17 @@ class Order(models.Model):
             raise Exception("Wrong operation.")
         if amount > Product.objects.get(code=product.code).inventory:
             raise Exception("Inventory is not enough.")
-        if product in [item.product for item in self.rows]:
+        if product.code in [item.product.code for item in self.getRows()]:
             order_row = self.getOrderRow(product)
             order_row.amount += amount
             order_row.save()
         else:
             order_row = OrderRow(product=product, amount=amount, order=self)
             order_row.save()
-            self.rows.append(order_row)
 
         from django.utils import timezone
         self.order_time = timezone.now()
-        self.total_price += product.price
+        self.total_price += product.price * amount
         self.save()
         pass
 
@@ -172,16 +170,17 @@ class Order(models.Model):
         :param amount:int Optional
         :return:void
         """
-        if amount <= 0 or not Product.objects.filter(code=product.code).exists():
+        if amount and amount <= 0 or not Product.objects.filter(code=product.code).exists():
             raise Exception("Wrong operation.")
 
-        if product in [item.product for item in self.rows]:
+        if product.code in [item.product.code for item in self.getRows()]:
             order_row = self.getOrderRow(product)
-            if amount is None:
+            if amount is None or order_row.amount == amount:
                 order_row.delete()
-                self.rows.remove(order_row)
-            elif order_row.amount >= amount:
+                self.total_price -= product.price * order_row.amount
+            elif order_row.amount > amount:
                 order_row.amount -= amount
+                self.total_price -= product.price * amount
                 order_row.save()
             else:
                 raise Exception("Entered amount is much than the amount in the card.")
@@ -191,7 +190,6 @@ class Order(models.Model):
 
         from django.utils import timezone
         self.order_time = timezone.now()
-        self.total_price -= product.price
         self.save()
 
         pass
@@ -210,21 +208,19 @@ class Order(models.Model):
 
         if self.status != Order.STATUS_SHOPPING:
             raise Exception("This order is not submittable.")
+        if len(self.getRows()) == 0:
+            raise Exception("The cart is empty.")
 
-        temporarily_reduced = list()
+        temporarily_reduced = dict()
 
         def recharge_inventories(max_):
             """Increases inventories by reduced value, for all of manipulated products.
             :param max_:int last index of manipulated products in orderRows list. #exlusive!"""
-            j = 0
-            for order_row_ in self.rows:
-                if j == max_:
-                    break
-                order_row_.product.increase_inventory(temporarily_reduced[j])
-                j += 1
+            for order_row_ in self.getRows():
+                order_row_.product.increase_inventory(temporarily_reduced[order_row_.id])
 
         i = 0
-        for order_row in self.rows:
+        for order_row in self.getRows():
             if order_row.amount > order_row.product.inventory:
                 recharge_inventories(i)
                 raise Exception(
@@ -232,12 +228,12 @@ class Order(models.Model):
                     Now the product's inventory is %i numbers.""" \
                     % (order_row.product.name, order_row.product.inventory))
             else:
-                temporarily_reduced.append(order_row.amount)
+                temporarily_reduced[order_row.id] = order_row.amount
                 order_row.product.decrease_inventory(order_row.amount)
             i += 1
 
 
-        price_sum = sum([item.product.price * item.amount for item in self.rows])
+        price_sum = sum([item.product.price * item.amount for item in self.getRows()])
         customer_balance = self.customer.balance
         if price_sum > customer_balance:
             recharge_inventories(i)
@@ -262,7 +258,7 @@ class Order(models.Model):
             raise Exception("Not permitted operation.")
 
         if self.status == Order.STATUS_SUBMITTED:
-            for order_row in self.rows:
+            for order_row in self.getRows():
                 self.customer.balance += order_row.product.price * order_row.amount
                 self.customer.save()
                 order_row.product.increase_inventory(order_row.amount)
@@ -281,15 +277,12 @@ class Order(models.Model):
         pass
 
     def getOrderRow(self, product: Product):
-        for orderRow in self.rows:
-            if orderRow.product == product:
-                return orderRow
-        return None
+        return self.orderrow_set.get(product=product)
 
     def __str__(self):
         dic = dict(Order.status_choices)
         return "Order{customer:%s, order_time:%s, rows:%s, status:%s, total_price:%i}"\
-            % (str(self.customer), str(self.order_time), str(self.rows), dic[self.status], self.total_price)
+            % (str(self.customer), str(self.order_time), str(self.getRows()), dic[self.status], self.total_price)
 
     def to_dict(self, errors=None):
         out = {
@@ -303,11 +296,15 @@ class Order(models.Model):
     def toDict(self):
         return {
             'id': self.id,
-            'order_time': str(self.order_time),
+            'order_time': self.order_time.strftime("%Y-%m-%d %H:%M:%S"),
             'status': dict(Order.status_choices)[self.status],
             'total_price': self.total_price,
-            'rows': [item.to_dict() for item in OrderRow.objects.filter(order=self.id)]
+            'rows': [item.to_dict() for item in self.getRows()]
         }
+
+    def getRows(self):
+        self.rows = list(self.orderrow_set.all())
+        return self.rows
 
 
 class OrderRow(models.Model):
