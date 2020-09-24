@@ -13,7 +13,10 @@ from .models import *
 def product_insert(request):
     if request.method !="POST":
         return JsonResponse({'message':'Wrong method.'}, status=400)
-    args = json.loads(request.body.decode('utf-8'))
+    try:
+        args = json.loads(request.body.decode('utf-8'))
+    except:
+        return JsonResponse({'message': "Can't read request's body content."}, status=400)
     product = Product(code=args['code'], name=args['name'], price=args['price'])
     if 'inventory' in args :
         product.inventory = args['inventory']
