@@ -6,11 +6,13 @@ import json
 from .models import *
 
 
-# Products
+# Products -------------------------------------------------------------------------------------------
 
-
+# Products #1
 @csrf_exempt
 def product_insert(request):
+    if request.method !="POST":
+        return JsonResponse({'message':'Wrong method.'}, status=400)
     args = json.loads(request.body.decode('utf-8'))
     product = Product(code=args['code'], name=args['name'], price=args['price'])
     if 'inventory' in args :
@@ -25,17 +27,23 @@ def product_insert(request):
     return JsonResponse({'id':product.id}, status=201)
 
 
+# Products #2
 @csrf_exempt
 def product_list(request):
+    if request.method !="GET":
+        return JsonResponse({'message':'Wrong method.'}, status=400)
     products = Product.objects.all()
 
-    if request.method == 'GET' and 'search' in request.GET:
+    if 'search' in request.GET:
         products = products.filter(name__contains=request.GET['search'])
     return JsonResponse({'products': [product.to_dict() for product in products]}, status=200)
 
 
+# Products #3
 @csrf_exempt
 def product_info(request, product_id):
+    if request.method != 'GET':
+        return JsonResponse({'message': 'Wrong method.'}, status=400)
     try:
         res = Product.objects.get(id=product_id)
         return JsonResponse(res.to_dict(), status=200)
@@ -43,14 +51,24 @@ def product_info(request, product_id):
         return JsonResponse({"message": "Product Not Found."}, status=404)
 
 
+# Products #4
 @csrf_exempt
 def product_editInventory(request, product_id):
+    if request.method != 'POST':
+        return JsonResponse({'message': 'Wrong method.'}, status=400)
+
     try:
         product = Product.objects.get(id=product_id)
     except Product.DoesNotExist:
         return JsonResponse({"message": "Product Not Found."}, status=404)
 
-    amount = json.loads(request.body.decode('utf-8'))['amount']
+    try:
+        args = json.loads(request.body.decode('utf-8'))
+    except:
+        return JsonResponse({'message':"Can't read request body."},status=400)
+    if 'amount' not in args:
+        return JsonResponse({'message': "Amount not found."}, status=400)
+    amount = args['amount']
     try:
         if amount > 0:
             product.increase_inventory(amount)
@@ -63,11 +81,14 @@ def product_editInventory(request, product_id):
     return JsonResponse(product.to_dict(), status=200)
 
 
-# Customers
+# Customers --------------------------------------------------------------------------------------------------
 
 
+# Customers #1
 @csrf_exempt
 def customer_register(request):
+    if request.method != "POST":
+        return JsonResponse({'message': 'Wrong method.'}, status=400)
     try:
         args = json.loads(request.body.decode('utf-8'))
         user = User(username=args['username'], first_name=args['first_name'], last_name=args['last_name'],
@@ -89,22 +110,28 @@ def customer_register(request):
     return JsonResponse({'id': customer.id}, status=201)
 
 
+# Customers #2
 @csrf_exempt
 def customer_list(request):
+    if request.method != 'GET':
+        return JsonResponse({'message':'Wrong method.'}, status=400)
     customers = Customer.objects.all()
 
-    if request.method == 'GET' and 'search' in request.GET:
+    if 'search' in request.GET:
         from django.db.models import Q
         searched = request.GET['search']
         customers = customers.filter(Q(user__first_name__contains=searched) |
                              Q(user__last_name__contains=searched) |
                              Q(user__username__contains=searched) |
                              Q(address__contains=searched))
-    return JsonResponse({'products': [customer.to_dict() for customer in customers]}, status=200)
+    return JsonResponse({'customers': [customer.to_dict() for customer in customers]}, status=200)
 
 
+# Customers #3
 @csrf_exempt
 def customer_info(request, customer_id):
+    if request.method != 'GET':
+        return JsonResponse({'message':'Wrong method.'}, status=400)
     try:
         res = Customer.objects.get(id=customer_id)
         return JsonResponse(res.to_dict(), status=200)
@@ -112,9 +139,17 @@ def customer_info(request, customer_id):
         return JsonResponse({"message": "Customer Not Found."}, status=404)
 
 
+# Customers #4
 @csrf_exempt
 def customer_edit(request, customer_id):
-    args = json.loads(request.body.decode('utf-8'))
+    if request.method != 'POST':
+        return JsonResponse({'message':'Wrong method.'}, status=400)
+
+    try:
+        args = json.loads(request.body.decode('utf-8'))
+    except:
+        return JsonResponse({'message': "Can't read request body."}, status=400)
+
     try:
         customer = Customer.objects.get(id=customer_id)
     except Customer.DoesNotExist:
@@ -167,8 +202,11 @@ def customer_edit(request, customer_id):
     return JsonResponse(customer.to_dict(), status=200)
 
 
+# Customers #5
 @csrf_exempt
 def customer_login(request):
+    if request.method != 'POST':
+        return JsonResponse({'message': 'Wrong method.'}, status=400)
     try:
         args = json.loads(request.body.decode('utf-8'))
         if not request.user.is_active:
@@ -182,14 +220,17 @@ def customer_login(request):
         else:
             return JsonResponse({"message": "Username or Password is incorrect."}, status=404)
     except:
-        return JsonResponse({"message": "Something is wrong! please read the documentations."}, status=404)
+        return JsonResponse({"message": "Something is wrong! please read the documentations."}, status=400)
 
 
+# Customers #6
 @csrf_exempt
 def customer_logout(request):
+    if request.method != 'POST':
+        return JsonResponse({'message': 'Wrong method.'}, status=400)
     try:
         args = json.loads(request.body.decode('utf-8'))
-        if request.method != "POST" or len(args) > 0:
+        if len(args) > 0:
             raise Exception("")
         if request.user.is_authenticated:
             logout(request)
@@ -197,30 +238,38 @@ def customer_logout(request):
         else:
             return JsonResponse({"message": "You are not logged in."}, status=403)
     except:
-        return JsonResponse({"message": "Something is wrong! please read the documentations."}, status=404)
+        return JsonResponse({"message": "Something is wrong! please read the documentations."}, status=400)
 
 
+# Customers #7
 @csrf_exempt
 def customer_profile(request):
+    if request.method != 'GET':
+        return JsonResponse({'message': 'Wrong method.'}, status=400)
+
     if request.user.is_authenticated:
         return JsonResponse(request.user.customer.to_dict(), status=200)
     else:
         return JsonResponse({"message": "You are not logged in."}, status=403)
 
 
-# Orders
+# Orders ---------------------------------------------------------------------------------------------
 
+
+# Orders #1
 @csrf_exempt
 def shopping_cart(request):
+    if request.method != 'GET':
+        return JsonResponse({'message': 'Wrong method.'}, status=400)
     if request.user.is_authenticated and request.user.is_active:
         from django.db.models import Q
-        order = Order.objects.filter(Q(status=Order.STATUS_SHOPPING) | Q(status=Order.STATUS_SUBMITTED))\
-            .get(customer=request.user.customer)
+        order = Order.initiate(request.user.customer)
         return JsonResponse(order.to_dict(), status=200)
     else:
         return JsonResponse({"message": "You are not logged in."}, status=403)
 
 
+# Orders #2
 @csrf_exempt
 def shopping_add_items(request):
     if request.method != 'POST':
@@ -237,8 +286,7 @@ def shopping_add_items(request):
                 return JsonResponse({'message': 'Not able to read your request body.'}, status=404)
 
             from django.db.models import Q
-            order = Order.objects.filter(Q(status=Order.STATUS_SHOPPING) | Q(status=Order.STATUS_SUBMITTED)) \
-                .get(customer=request.user.customer)
+            order = Order.initiate(request.user.customer)
 
             errors = []
             for item in arr:
@@ -267,9 +315,10 @@ def shopping_add_items(request):
         else:
             return JsonResponse({"message": "You are not logged in."}, status=403)
     except Exception:
-        JsonResponse({"message": "Something is wrong."}, status=404)
+        return JsonResponse({"message": "Something is wrong."}, status=404)
 
 
+# Orders #3
 @csrf_exempt
 def shopping_remove_items(request):
     if request.method != 'POST':
@@ -285,8 +334,7 @@ def shopping_remove_items(request):
                 return JsonResponse({'message': 'Not able to read your request body.'}, status=404)
 
             from django.db.models import Q
-            order = Order.objects.filter(Q(status=Order.STATUS_SHOPPING) | Q(status=Order.STATUS_SUBMITTED)) \
-                .get(customer=request.user.customer)
+            order = Order.initiate(request.user.customer)
 
             errors = []
             for item in arr:
@@ -312,14 +360,20 @@ def shopping_remove_items(request):
 
         else:
             return JsonResponse({"message": "You are not logged in."}, status=403)
-    except Exception:
-        JsonResponse({"message": "Something is wrong."}, status=404)
+    except Exception as e:
+        return JsonResponse({"message": "Something is wrong."}, status=400)
 
-
+# Orders #4
 @csrf_exempt
 def shopping_submit(request):
     if request.method != 'POST':
-        return JsonResponse({'message': 'Wrong method.'}, status=404)
+        return JsonResponse({'message': 'Wrong method.'}, status=400)
+
+    try:
+        if len(json.loads(request.body.decode('utf-8'))):
+            raise Exception("")
+    except:
+        return JsonResponse({"message": "Can't read request body."}, status=400)
     try:
         if request.user.is_authenticated and request.user.is_active:
             raw_json = request.body.decode('utf-8')
@@ -327,13 +381,13 @@ def shopping_submit(request):
                 return JsonResponse({'message': 'Not able to read your request body.'}, status=404)
 
             from django.db.models import Q
-            order = Order.objects.filter(Q(status=Order.STATUS_SHOPPING) | Q(status=Order.STATUS_SUBMITTED)) \
-                .get(customer=request.user.customer)
+            order = Order.initiate(request.user.customer)
             try:
                 order.submit()
             except Exception as e:
                 return JsonResponse({"message": str(e)}, status=400)
+            return JsonResponse(order.toDict(), status=200)
         else:
             return JsonResponse({"message": "You are not logged in."}, status=403)
     except Exception:
-        JsonResponse({"message": "Something is wrong."}, status=404)
+        return JsonResponse({"message": "Something is wrong."}, status=400)
