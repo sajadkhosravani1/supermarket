@@ -1,7 +1,28 @@
 # Orders manager
 
-A django project for customers to order products.
+A django project providing an API for customers to order products.
 It's actually my final project for a [SUT](http://www.en.sharif.edu/) django course held by [maktabkhooneh](http://maktabkhooneh.org).
+
+
+## How to run
+
+To run project in development mode, Just use steps below:
+
+1- Install `python3.5`, `pip3`, `virtualenv` in your system.
+
+2- Make development environment ready using commands below;
+
+```bash
+git clone https://github.com/sajadkhosravani1/ && cd canadaHouse
+virtualenv -p python3.5 venv # Create virtualenv named venv
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+```
+3- Run the server using `python manage.py runserver`
+
+4- Go to [http://localhost:8000](http://localhost:8000) to see the home page.
+
 
 ## Modeling 
 ![image](https://maktabkhooneh.org/media/uploads/project_phase1_modeling.jpg)
@@ -43,6 +64,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 `GET /market/product/list/?search=milk`
 
 در پاسخ این درخواست، فهرستی از کالاها به همراه تمامی فیلدهای آن به صورت JSON با کد پاسخ 200 ارسال می‌شود. اگر کاربر کلمه‌ای برای جستجو ارسال کرده بود، باید تنها کالاهایی در این فهرست نمایش داده شوند که کلمه مذکور در اسم آن‌ها وجود داشته باشد. در مثال زیر، پاسخ به یک درخواست فهرست کامل را مشاهده می‌کنید:
+
 `200 OK`
 ```json
 {
@@ -367,6 +389,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
 برای مشاهده سبد خرید کاربر حاضر، درخواست GET به آدرس زیر ارسال می‌شود.
 
 `(login required)`
+
 `GET /market/shopping/cart/`
 
 کد پاسخ برابر 200 و بدنه پاسخ حاوی اطلاعات سبد خرید کاربر، شامل فهرستی از کالاهای موجود در سبد (کد کالا، نام کالا، قیمت واحد کالا و مقدار کالا در سبد) و مبلغ کل سبد خرید خواهد بود.
@@ -651,7 +674,7 @@ It's actually my final project for a [SUT](http://www.en.sharif.edu/) django cou
     - [x] Login
     - [x] Logout
     - [x] Customer's profile
-- [ ] Orders management
+- [x] Orders management
     - [x] Viewing cart
     - [x] Adding to cart
     - [x] Deleting from cart
