@@ -152,6 +152,8 @@ class Order(models.Model):
         if product.code in [item.product.code for item in self.getRows()]:
             order_row = self.getOrderRow(product)
             order_row.amount += amount
+            if order_row.amount > Product.objects.get(code=product.code).inventory:
+                raise Exception("Inventory is not enough.")
             order_row.save()
         else:
             order_row = OrderRow(product=product, amount=amount, order=self)
