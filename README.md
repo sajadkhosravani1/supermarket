@@ -1,8 +1,6 @@
 # Orders manager
 
 A django project providing an API for customers to order products.
-It's actually my final project for a [SUT](http://www.en.sharif.edu/) django course held by [maktabkhooneh](http://maktabkhooneh.org).
-
 
 ## How to run
 
